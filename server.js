@@ -58,8 +58,9 @@ if (process.env.NODE_ENV === "production") {
   const frontendPath = path.join(__dirname, "frontend", "dist");
   app.use(express.static(frontendPath));
 
-  //  Fix wildcard route to avoid path-to-regexp error
-  app.get("/*", (req, res) => {
+  // Only match frontend paths, avoid passing full URL
+  app.get("*", (req, res) => {
+    if (req.originalUrl.startsWith("/api")) return res.status(404).end();
     res.sendFile(path.join(frontendPath, "index.html"));
   });
 }
