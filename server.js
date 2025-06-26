@@ -62,13 +62,16 @@ app.use("/api/v1/connections", connectionRoutes);
 if (process.env.NODE_ENV === "production") {
   const frontendPath = path.join(__dirname, "frontend", "dist");
   app.use(express.static(frontendPath));
+}
 
   //Catch-all route for React (skip API requests)
   app.get("*", (req, res) => {
-    if (req.originalUrl.startsWith("/api")) return res.status(404).end();
-    res.sendFile(path.join(frontendPath, "index.html"));
-  });
-}
+  if (req.originalUrl.startsWith("/api")) {
+    return res.status(404).end(); // Don't serve index.html for API routes
+  }
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
+
 
 //  Start the server
 app.listen(PORT, async () => {
