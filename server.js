@@ -12,23 +12,21 @@ import connectionRoutes from "./routes/connection.route.js";
 
 import { connectDB } from "./lib/db.js";
 
-//  Load .env
+// Load .env
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Get correct __dirname in ES modules
 const __dirname = path.resolve();
 
-//  Log the frontend URL for debugging
+// Log allowed frontend URL
 console.log("Allowed Frontend URL:", process.env.CLIENT_URL);
 
-//Allow only specified domains
+// Set CORS origins
 const allowedOrigins = [
   "http://localhost:5173",
   "https://linkedin-frontend-7qvq.vercel.app",
-].filter(Boolean); // Removes undefined
+].filter(Boolean); // Remove any undefined
 
 app.use(
   cors({
@@ -36,7 +34,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.error("Blocked by CORS:", origin); // Debug
+        console.error("Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -44,37 +42,33 @@ app.use(
   })
 );
 
-
-
-
-//  Middleware setup
 app.use(express.json({ limit: "5mb" }));
 app.use(cookieParser());
 
-// API routes
+// API Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/connections", connectionRoutes);
 
-// Serve frontend in production
+// Serve frontend (in production)
+const frontendPath = path.join(__dirname, "frontend", "dist");
+
 if (process.env.NODE_ENV === "production") {
-  const frontendPath = path.join(__dirname, "frontend", "dist");
   app.use(express.static(frontendPath));
 }
 
-  //Catch-all route for React (skip API requests)
-  app.get("*", (req, res) => {
+// React frontend catch-all route (for production)
+app.get("*", (req, res) => {
   if (req.originalUrl.startsWith("/api")) {
-    return res.status(404).end(); // Don't serve index.html for API routes
+    return res.status(404).end();
   }
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-
-//  Start the server
+// Start server
 app.listen(PORT, async () => {
   await connectDB();
-  console.log(` Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
