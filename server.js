@@ -12,22 +12,22 @@ import connectionRoutes from "./routes/connection.route.js";
 
 import { connectDB } from "./lib/db.js";
 
-// Load environment variables
+// ✅ Load .env
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// __dirname workaround for ES modules
+// ✅ Get correct __dirname in ES modules
 const __dirname = path.resolve();
 
-// Allow frontend URL from env
+// ✅ Log the frontend URL for debugging
 console.log("Allowed Frontend URL:", process.env.CLIENT_URL);
 
-//  Allowed origins for CORS
+// ✅ Allow only specified domains
 const allowedOrigins = [
   "http://localhost:5173",
-  process.env.CLIENT_URL,
+  process.env.CLIENT_URL, // e.g. "https://linkedin-frontend-7qvq.vercel.app"
 ];
 
 app.use(
@@ -43,30 +43,31 @@ app.use(
   })
 );
 
+// ✅ Middleware setup
 app.use(express.json({ limit: "5mb" }));
 app.use(cookieParser());
 
-// Register API routes
+// ✅ API routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/connections", connectionRoutes);
 
-// Serve frontend in production
+// ✅ Serve frontend in production
 if (process.env.NODE_ENV === "production") {
   const frontendPath = path.join(__dirname, "frontend", "dist");
   app.use(express.static(frontendPath));
 
-  // Only match frontend paths, avoid passing full URL
+  // ✅ Catch-all route for React (skip API requests)
   app.get("*", (req, res) => {
     if (req.originalUrl.startsWith("/api")) return res.status(404).end();
     res.sendFile(path.join(frontendPath, "index.html"));
   });
 }
 
-//  Start the server
-app.listen(PORT, () => {
-  console.log(` Server running on port ${PORT}`);
-  connectDB();
+// ✅ Start the server
+app.listen(PORT, async () => {
+  await connectDB();
+  console.log(`✅ Server running on port ${PORT}`);
 });
